@@ -9,14 +9,13 @@ import (
 	"github.com/cheggaaa/pb"
 )
 
-func rayColor(r Ray) Vec3 {
-	t := hitSphere(Vec3{0, 0, -1}, 0.5, r)
-	if t > 0.0 {
-		N := unit_vector(r.At(t).Sub(Vec3{0, 0, -1}))
-		return Vec3{N.x + 1, N.y + 1, N.z + 1}.Scale(0.5)
+func rayColor(r Ray, world HittableList) Vec3 {
+	var rec HitRecord
+	if world.Hit(r, 0, math.Inf(1), rec) {
+		return (rec.normal.Add(Vec3{1, 1, 1})).Scale(0.5)
 	}
 	unitDirection := unit_vector(r.Direction)
-	t = 0.5 * (unitDirection.y + 1.0)
+	t := 0.5 * (unitDirection.y + 1.0)
 	return Vec3{1.0, 1.0, 1.0}.Scale(1.0 - t).Add(Vec3{0.5, 0.7, 1.0}.Scale(t))
 }
 
@@ -37,6 +36,10 @@ func main() {
 	imgWidth := 400
 	aspectRatio := 16.0 / 9.0
 	imgHeight := int(float64(imgWidth) / aspectRatio)
+
+	var world HittableList
+	world.Add(Sphere{Vec3{0, 0, -1}, 0.5})
+	world.Add(Sphere{Vec3{0, -100.5, -1}, 100})
 
 	viewportHeight := 2.0
 	viewportWidth := aspectRatio * viewportHeight
@@ -65,7 +68,7 @@ func main() {
 			v := float64(j) / float64(imgWidth-1)
 			r := Ray{origin, lowerLeftCorner.Add(horizontal.Scale(u)).Add(vertical.Scale(v)).Sub(origin)}
 			// pixel_color := Color{float64(i) / float64(imgWidth-1), float64(j) / float64(imgHeight-1), 0.25}
-			var pixelColor Vec3 = rayColor(r)
+			var pixelColor Vec3 = rayColor(r, world)
 			val := WriteColor(pixelColor)
 
 			log.Print(val)

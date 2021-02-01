@@ -16,6 +16,26 @@ type Sphere struct {
 
 type hittable struct{}
 
+type HittableList []Sphere
+
+func (hl HittableList) Hit(r Ray, tMin float64, tMax float64, rec HitRecord) bool {
+	hitAnything := false
+	closestSoFar := tMax
+	var tempRec HitRecord
+	for i := 0; i < len(hl); i++ {
+		if hit := hl[i].Hit(r, tMin, closestSoFar, rec); hit {
+			hitAnything = true
+			closestSoFar = tempRec.t
+			rec = tempRec
+		}
+	}
+	return hitAnything
+}
+
+func (hl *HittableList) Add(spheres ...Sphere) {
+	*hl = append(*hl, spheres...)
+}
+
 func (rec HitRecord) setFaceNormal(r Ray, outwardNormal Vec3) {
 	frontFace := r.Direction.Dot(outwardNormal) < 0
 	if frontFace {
@@ -44,7 +64,6 @@ func (s Sphere) Hit(r Ray, tMin float64, tMax float64, rec HitRecord) bool {
 	}
 	rec.t = root
 	rec.p = r.At(rec.t)
-	// rec.normal = (rec.p.Sub(s.Center)).Scale(1 / s.Radius)
 	outwardNormal := (rec.p.Sub(s.Center).Scale(1 / s.Radius))
 	rec.setFaceNormal(r, outwardNormal)
 	return true
