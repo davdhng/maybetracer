@@ -4,51 +4,38 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/rand"
 	"os"
 
 	"github.com/cheggaaa/pb"
 )
 
-func rayColor(r Ray, world HittableList) Vec3 {
+func rayColor(r Ray, world HittableList, depth int) Vec3 {
 	var rec HitRecord
-	if world.Hit(r, 0, math.Inf(1), rec) {
-		return (rec.normal.Add(Vec3{1, 1, 1})).Scale(0.5)
+	if depth <= 0 {
+		return Vec3{0, 0, 0}
 	}
-	unitDirection := unit_vector(r.Direction)
+	if world.Hit(r, 0.001, math.MaxFloat64, rec) {
+		target := rec.p.Add(rec.normal).Add(rec.p.randSphere())
+		return (rayColor(Ray{rec.p, target.Sub(rec.p)}, world, depth-1)).Scale(0.5)
+	}
+	unitDirection := r.Direction.unit_vector()
 	t := 0.5 * (unitDirection.y + 1.0)
-	return Vec3{1.0, 1.0, 1.0}.Scale(1.0 - t).Add(Vec3{0.5, 0.7, 1.0}.Scale(t))
-}
-
-func hitSphere(center Vec3, radius float64, r Ray) float64 {
-	oc := r.Origin.Sub(center)
-	a := r.Direction.length_squared()
-	half_b := oc.Dot(r.Direction)
-	c := oc.length_squared() - radius*radius
-	discriminant := half_b*half_b - a*c
-	if discriminant < 0 {
-		return -1.0
-	} else {
-		return (-half_b - math.Sqrt(discriminant)) / a
-	}
+	return (Vec3{1.0, 1.0, 1.0}.Scale(1.0 - t)).Add(Vec3{0.5, 0.7, 1.0}.Scale(t))
 }
 
 func main() {
 	imgWidth := 400
 	aspectRatio := 16.0 / 9.0
 	imgHeight := int(float64(imgWidth) / aspectRatio)
+	samples_per_pixel := 100
+	maxDepth := 50
 
 	var world HittableList
 	world.Add(Sphere{Vec3{0, 0, -1}, 0.5})
 	world.Add(Sphere{Vec3{0, -100.5, -1}, 100})
 
-	viewportHeight := 2.0
-	viewportWidth := aspectRatio * viewportHeight
-	focalLength := 1.0
-
-	origin := Vec3{0, 0, 0}
-	horizontal := Vec3{viewportWidth, 0, 0}
-	vertical := Vec3{0, viewportHeight, 0}
-	lowerLeftCorner := origin.Sub(horizontal.Scale(0.5)).Sub(vertical.Scale(0.2)).Sub(Vec3{0, 0, focalLength})
+	cam := NewCamera()
 
 	f, err := os.OpenFile("test.ppm", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -61,18 +48,22 @@ func main() {
 	log.Printf("P3\n%v %v\n255\n", imgWidth, imgHeight)
 	bar := pb.StartNew(imgHeight)
 
-	for j := imgHeight - 1; j >= 0; j-- {
-		bar.Increment()
+	for j := imgHeight; j > 0; j-- {
 		for i := 0; i < imgWidth; i++ {
-			u := float64(i) / float64(imgWidth-1)
-			v := float64(j) / float64(imgWidth-1)
-			r := Ray{origin, lowerLeftCorner.Add(horizontal.Scale(u)).Add(vertical.Scale(v)).Sub(origin)}
-			// pixel_color := Color{float64(i) / float64(imgWidth-1), float64(j) / float64(imgHeight-1), 0.25}
-			var pixelColor Vec3 = rayColor(r, world)
-			val := WriteColor(pixelColor)
+			pixelColor := Vec3{0, 0, 0}
+			rnd := rand.New(rand.NewSource(int64(42 * j)))
+			for s := 0; s < samples_per_pixel; s++ {
+				u := (float64(i) + rnd.Float64()) / float64(imgWidth)
+				v := (float64(j) + rnd.Float64()) / float64(imgHeight)
+				r := cam.getRay(u, v)
+				pc := rayColor(r, world, maxDepth)
+				pixelColor = pixelColor.Add(pc)
+			}
+			val := WriteColor(pixelColor, samples_per_pixel)
 
 			log.Print(val)
 		}
+		bar.Increment()
 	}
 	bar.Finish()
 	fmt.Println("Done.")

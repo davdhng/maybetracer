@@ -1,6 +1,9 @@
 package main
 
-import "math"
+import (
+	"math"
+	"math/rand"
+)
 
 type Vec3 struct {
 	x, y, z float64
@@ -57,6 +60,32 @@ func (v Vec3) length() float64 {
 	return math.Sqrt(v.length_squared())
 }
 
-func unit_vector(v Vec3) Vec3 {
+func (v Vec3) unit_vector() Vec3 {
 	return v.Div(v.length())
+}
+
+func (v Vec3) randomRange(min float64, max float64) Vec3 {
+	return Vec3{
+		rand.Float64()*(max-min) + min,
+		rand.Float64()*(max-min) + min,
+		rand.Float64()*(max-min) + min,
+	}
+}
+
+func (v Vec3) random() Vec3 {
+	return Vec3{
+		rand.Float64(),
+		rand.Float64(),
+		rand.Float64(),
+	}
+}
+
+func (v Vec3) randSphere() Vec3 {
+	for {
+		p := v.randomRange(-1.0, 1.0)
+		if p.length_squared() >= 1 {
+			continue
+		}
+		return p
+	}
 }

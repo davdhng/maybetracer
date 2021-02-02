@@ -1,6 +1,8 @@
 package main
 
-import "math"
+import (
+	"math"
+)
 
 type HitRecord struct {
 	p         Vec3
@@ -23,7 +25,7 @@ func (hl HittableList) Hit(r Ray, tMin float64, tMax float64, rec HitRecord) boo
 	closestSoFar := tMax
 	var tempRec HitRecord
 	for i := 0; i < len(hl); i++ {
-		if hit := hl[i].Hit(r, tMin, closestSoFar, rec); hit {
+		if hl[i].Hit(r, tMin, closestSoFar, tempRec) {
 			hitAnything = true
 			closestSoFar = tempRec.t
 			rec = tempRec
@@ -41,31 +43,32 @@ func (rec HitRecord) setFaceNormal(r Ray, outwardNormal Vec3) {
 	if frontFace {
 		rec.normal = outwardNormal
 	} else {
-		rec.normal = outwardNormal.Scale(-1)
+		rec.normal = outwardNormal.Scale(-1.0)
 	}
 }
 
 func (s Sphere) Hit(r Ray, tMin float64, tMax float64, rec HitRecord) bool {
 	oc := r.Origin.Sub(s.Center)
 	a := r.Direction.length_squared()
-	half_b := oc.Dot(r.Direction)
+	halfB := oc.Dot(r.Direction)
 	c := oc.length_squared() - s.Radius*s.Radius
-	discriminant := half_b*half_b - a*c
+
+	discriminant := halfB*halfB - a*c
 	if discriminant < 0 {
 		return false
 	}
 	sqrtd := math.Sqrt(discriminant)
-	root := (-half_b - sqrtd) / a
+
+	root := (-halfB - sqrtd) / a
 	if root < tMin || tMax < root {
-		root = (-half_b + sqrtd) / a
+		root = (-halfB + sqrtd) / a
 		if root < tMin || tMax < root {
 			return false
 		}
 	}
 	rec.t = root
 	rec.p = r.At(rec.t)
-	outwardNormal := (rec.p.Sub(s.Center).Scale(1 / s.Radius))
+	outwardNormal := (rec.p.Sub(s.Center)).Div(s.Radius)
 	rec.setFaceNormal(r, outwardNormal)
 	return true
-
 }
