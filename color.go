@@ -37,9 +37,5 @@ func WriteColor(pixel_color Vec3, samples_per_pixel int) string {
 	ig := uint8(mapp(g, 0, 1, 0, maxColor))
 	ib := uint8(mapp(b, 0, 1, 0, maxColor))
 
-	// ir := int(256 * clamp(r, 0.0, 0.999))
-	// ig := int(256 * clamp(g, 0.0, 0.999))
-	// ib := int(256 * clamp(b, 0.0, 0.999))
-
 	return fmt.Sprintf("%v %v %v\n", ir, ig, ib)
 }

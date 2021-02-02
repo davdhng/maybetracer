@@ -11,13 +11,15 @@ import (
 )
 
 func rayColor(r Ray, world HittableList, depth int) Vec3 {
-	var rec HitRecord
+	// var rec HitRecord
 	if depth <= 0 {
 		return Vec3{0, 0, 0}
 	}
-	if world.Hit(r, 0.001, math.MaxFloat64, rec) {
-		target := rec.p.Add(rec.normal).Add(rec.p.randSphere())
+	if hit, rec := world.Hit(r, 0.001, math.MaxFloat64); hit {
+		// target := rec.p.Add(rec.normal).Add(rec.p.randSphere())
+		target := rec.p.Add(rec.normal).Add(RandUnitVec())
 		return (rayColor(Ray{rec.p, target.Sub(rec.p)}, world, depth-1)).Scale(0.5)
+		// return (rec.normal.Add(Vec3{1.0, 1.0, 1.0})).Scale(0.5)
 	}
 	unitDirection := r.Direction.unit_vector()
 	t := 0.5 * (unitDirection.y + 1.0)
@@ -53,8 +55,8 @@ func main() {
 			pixelColor := Vec3{0, 0, 0}
 			rnd := rand.New(rand.NewSource(int64(42 * j)))
 			for s := 0; s < samples_per_pixel; s++ {
-				u := (float64(i) + rnd.Float64()) / float64(imgWidth)
-				v := (float64(j) + rnd.Float64()) / float64(imgHeight)
+				u := (float64(i) + rnd.Float64()) / float64(imgWidth-1)
+				v := (float64(j) + rnd.Float64()) / float64(imgHeight-1)
 				r := cam.getRay(u, v)
 				pc := rayColor(r, world, maxDepth)
 				pixelColor = pixelColor.Add(pc)

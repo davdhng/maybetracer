@@ -53,7 +53,8 @@ func (u Vec3) Div(t float64) Vec3 {
 }
 
 func (v Vec3) length_squared() float64 {
-	return v.x*v.x + v.y*v.y + v.z*v.z
+	// return v.x*v.x + v.y*v.y + v.z*v.z
+	return v.Dot(v)
 }
 
 func (v Vec3) length() float64 {
@@ -80,12 +81,28 @@ func (v Vec3) random() Vec3 {
 	}
 }
 
-func (v Vec3) randSphere() Vec3 {
-	for {
-		p := v.randomRange(-1.0, 1.0)
-		if p.length_squared() >= 1 {
-			continue
-		}
-		return p
+// func (v Vec3) randSphere() Vec3 {
+// 	for {
+// 		p := v.randomRange(-1.0, 1.0)
+// 		if p.length_squared() >= 1 {
+// 			continue
+// 		}
+// 		return p
+// 	}
+// }
+func RandSphere() Vec3 {
+
+	a := 2.0 * rand.Float64() * math.Pi
+	z := 2.0 * (rand.Float64() - 0.5)
+	r := math.Sqrt(1 - z*z)
+	return Vec3{
+		r * math.Cos(a),
+		r * math.Sin(a),
+		z,
 	}
+}
+
+func RandUnitVec() Vec3 {
+	x := RandSphere()
+	return x.unit_vector()
 }
