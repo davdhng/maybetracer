@@ -21,7 +21,7 @@ func rayColor(r Ray, world HittableList, depth int) Vec3 {
 		return (rayColor(Ray{rec.p, target.Sub(rec.p)}, world, depth-1)).Scale(0.5)
 		// return (rec.normal.Add(Vec3{1.0, 1.0, 1.0})).Scale(0.5)
 	}
-	unitDirection := r.Direction.unit_vector()
+	unitDirection := r.Direction.unitVector()
 	t := 0.5 * (unitDirection.y + 1.0)
 	return (Vec3{1.0, 1.0, 1.0}.Scale(1.0 - t)).Add(Vec3{0.5, 0.7, 1.0}.Scale(t))
 }
@@ -30,7 +30,7 @@ func main() {
 	imgWidth := 400
 	aspectRatio := 16.0 / 9.0
 	imgHeight := int(float64(imgWidth) / aspectRatio)
-	samples_per_pixel := 100
+	samplesPerPixel := 100
 	maxDepth := 50
 
 	var world HittableList
@@ -54,14 +54,14 @@ func main() {
 		for i := 0; i < imgWidth; i++ {
 			pixelColor := Vec3{0, 0, 0}
 			rnd := rand.New(rand.NewSource(int64(42 * j)))
-			for s := 0; s < samples_per_pixel; s++ {
+			for s := 0; s < samplesPerPixel; s++ {
 				u := (float64(i) + rnd.Float64()) / float64(imgWidth-1)
 				v := (float64(j) + rnd.Float64()) / float64(imgHeight-1)
 				r := cam.getRay(u, v)
 				pc := rayColor(r, world, maxDepth)
 				pixelColor = pixelColor.Add(pc)
 			}
-			val := WriteColor(pixelColor, samples_per_pixel)
+			val := WriteColor(pixelColor, samplesPerPixel)
 
 			log.Print(val)
 		}

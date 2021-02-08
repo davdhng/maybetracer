@@ -56,9 +56,9 @@ func (rec *HitRecord) setFaceNormal(r Ray, outwardNormal Vec3) {
 
 func (s Sphere) Hit(r Ray, tMin float64, tMax float64) (bool, *HitRecord) {
 	oc := r.Origin.Sub(s.Center)
-	a := r.Direction.length_squared()
+	a := r.Direction.lengthSquared()
 	halfB := oc.Dot(r.Direction)
-	c := oc.length_squared() - s.Radius*s.Radius
+	c := oc.lengthSquared() - s.Radius*s.Radius
 
 	discriminant := halfB*halfB - a*c
 
